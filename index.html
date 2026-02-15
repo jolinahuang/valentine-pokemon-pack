@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Valentine's Booster Pack ♥</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #FFF0F4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    /* Floating background hearts */
+    .hearts-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .heart-drift {
+      position: absolute;
+      color: #FF85A1;
+      opacity: 0.4;
+      font-size: 1.2rem;
+      animation: drift-up 8s linear infinite;
+    }
+
+    .heart-drift:nth-child(1) { left: 10%; animation-delay: 0s; animation-duration: 10s; }
+    .heart-drift:nth-child(2) { left: 25%; animation-delay: 1.5s; animation-duration: 9s; }
+    .heart-drift:nth-child(3) { left: 40%; animation-delay: 3s; animation-duration: 11s; }
+    .heart-drift:nth-child(4) { left: 55%; animation-delay: 0.5s; animation-duration: 8s; }
+    .heart-drift:nth-child(5) { left: 70%; animation-delay: 2s; animation-duration: 12s; }
+    .heart-drift:nth-child(6) { left: 85%; animation-delay: 4s; animation-duration: 9s; }
+    .heart-drift:nth-child(7) { left: 15%; animation-delay: 5s; animation-duration: 10s; }
+    .heart-drift:nth-child(8) { left: 60%; animation-delay: 2.5s; animation-duration: 7s; }
+    .heart-drift:nth-child(9) { left: 90%; animation-delay: 6s; animation-duration: 11s; }
+    .heart-drift:nth-child(10) { left: 35%; animation-delay: 1s; animation-duration: 8s; }
+
+    @keyframes drift-up {
+      from {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+      }
+      10% { opacity: 0.4; }
+      90% { opacity: 0.3; }
+      to {
+        transform: translateY(-100px) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    .scene {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* Pack container with glow */
+    .pack-wrap {
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .pack-wrap:hover {
+      transform: scale(1.02);
+    }
+
+    .pack-wrap.opening {
+      pointer-events: none;
+    }
+
+    .pack-glow {
+      position: absolute;
+      inset: -20px;
+      background: radial-gradient(circle, rgba(255, 77, 109, 0.15) 0%, transparent 60%);
+      border-radius: 50%;
+      animation: glow-pulse 2s ease-in-out infinite;
+      pointer-events: none;
+      opacity: 0.5;
+    }
+
+    @keyframes glow-pulse {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+
+    .pack-container {
+      position: relative;
+      width: 280px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+
+    .pack-container img {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: contain;
+    }
+
+    .pack-wrap.tearing .pack-container {
+      animation: pack-burst 0.5s ease-out 0.2s both;
+    }
+
+    @keyframes pack-burst {
+      0% { transform: translateY(0) scale(1); }
+      40% { transform: translateY(-8px) scale(1.05); }
+      100% { transform: translateY(0) scale(0.95); opacity: 0.9; }
+    }
+
+    /* Heart particles container */
+    .particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .particle {
+      position: absolute;
+      font-size: 1.5rem;
+      color: #FF4D6D;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+    }
+
+    /* Cards phase: stack (flip in place) + collection row */
+    .cards-phase {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .cards-phase.visible {
+      display: flex;
+    }
+
+    .cards-phase.final-state .stack-container {
+      display: none;
+    }
+
+    .cards-phase.final-state .collection-row {
+      display: flex;
+    }
+
+    /* Stack: real cards, top card flips in place then slides to collection */
+    .stack-container {
+      position: relative;
+      width: 360px;
+      height: 420px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stack-container .card-wrapper {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      margin-left: -130px;
+      margin-top: -181px;
+      pointer-events: none;
+      cursor: pointer;
+    }
+
+    .stack-container .card-wrapper.size-stack-top {
+      margin-left: -150px;
+      margin-top: -209px;
+    }
+
+    .stack-container .card-wrapper:first-child {
+      pointer-events: auto;
+    }
+
+    .stack-container .card-wrapper:nth-child(1) { z-index: 5; transform: translate(0, 0); }
+    .stack-container .card-wrapper:nth-child(2) { z-index: 4; transform: translate(8px, 8px); }
+    .stack-container .card-wrapper:nth-child(3) { z-index: 3; transform: translate(16px, 16px); }
+    .stack-container .card-wrapper:nth-child(4) { z-index: 2; transform: translate(24px, 24px); }
+    .stack-container .card-wrapper:nth-child(5) { z-index: 1; transform: translate(32px, 32px); }
+
+    .stack-container .card-wrapper.sliding {
+      pointer-events: none;
+      z-index: 50;
+      transition: left 0.5s ease-in-out, top 0.5s ease-in-out, margin-left 0.5s ease-in-out, margin-top 0.5s ease-in-out, width 0.5s ease-in-out, height 0.5s ease-in-out, transform 0.5s ease-in-out;
+    }
+
+    /* Collection row */
+    .collection-row {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      padding: 0;
+      margin: 0;
+    }
+
+    .card-wrapper {
+      flex-shrink: 0;
+      perspective: 800px;
+      transition: transform 0.5s ease-in-out;
+      aspect-ratio: 180 / 251;
+      height: auto;
+    }
+
+    .card-wrapper.size-stack {
+      width: 260px;
+    }
+
+    .card-wrapper.size-stack-top {
+      width: 300px;
+    }
+
+    .card-wrapper.size-row {
+      width: 220px;
+    }
+
+    .card-wrapper.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-wrapper.flipped {
+      cursor: pointer;
+    }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.5s ease-in-out;
+    }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(255, 77, 109, 0.3);
+    }
+
+    .card-face.back {
+      z-index: 2;
+    }
+
+    .card-face.front {
+      transform: rotateY(180deg);
+      z-index: 1;
+    }
+
+    .card-face img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* FIXED: button is position:fixed so it always appears
+       at the bottom center of the screen, never buried */
+    .reset-btn {
+      display: none;
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 200;
+      padding: 12px 28px;
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 400;
+      color: #FFF0F4;
+      background: linear-gradient(135deg, #FF4D6D, #FF85A1);
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(255, 77, 109, 0.4);
+      transition: box-shadow 0.2s;
+    }
+
+    .reset-btn.visible {
+      display: inline-block;
+      animation: fade-in 0.3s ease-out;
+    }
+
+    .reset-btn:hover {
+      box-shadow: 0 6px 20px rgba(255, 77, 109, 0.5);
+    }
+
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    /* Mobile: collection row wraps 2x2+1, cards fit screen */
+    @media (max-width: 700px) {
+      /* Pack screen: body is the centering context */
+      body {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 100dvh !important;
+        height: auto !important;
+        overflow-y: auto !important;
+      }
+
+      .scene {
+        position: static !important;
+        width: 100vw !important;
+        height: auto !important;
+        min-height: 100dvh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 40px 16px 100px !important;
+        box-sizing: border-box !important;
+      }
+      /* When cards are open, anchor to top */
+      .scene.cards-open {
+        justify-content: flex-start !important;
+        padding-top: 60px !important;
+      }
+
+      /* Cards phase: static, flows from top */
+      .cards-phase {
+        position: static !important;
+        width: 100% !important;
+        align-items: center !important;
+        padding-top: 0 !important;
+        gap: 20px !important;
+      }
+
+      /* Stack centered via transform */
+      .stack-container {
+        width: 220px !important;
+        height: 300px !important;
+        margin: 0 auto !important;
+        flex-shrink: 0 !important;
+      }
+      .stack-container .card-wrapper { margin: 0 !important; }
+      .stack-container .card-wrapper:nth-child(1) { z-index:5; left:50%!important; top:50%!important; transform:translate(-50%,-50%) translate(0,0)!important; width:175px!important; }
+      .stack-container .card-wrapper:nth-child(2) { z-index:4; left:50%!important; top:50%!important; transform:translate(-50%,-50%) translate(6px,6px)!important; width:150px!important; }
+      .stack-container .card-wrapper:nth-child(3) { z-index:3; left:50%!important; top:50%!important; transform:translate(-50%,-50%) translate(12px,12px)!important; width:150px!important; }
+      .stack-container .card-wrapper:nth-child(4) { z-index:2; left:50%!important; top:50%!important; transform:translate(-50%,-50%) translate(18px,18px)!important; width:150px!important; }
+      .stack-container .card-wrapper:nth-child(5) { z-index:1; left:50%!important; top:50%!important; transform:translate(-50%,-50%) translate(24px,24px)!important; width:150px!important; }
+
+      /* Final row: 2-col grid */
+      .collection-row {
+        display: grid !important;
+        grid-template-columns: 155px 155px !important;
+        gap: 16px !important;
+        justify-content: center !important;
+        margin: 0 auto !important;
+      }
+      .card-wrapper.size-row { width: 155px !important; }
+
+      /* Constrain pack image so it doesn't fill the whole screen */
+      .pack-container {
+        width: 200px !important;
+      }
+
+      /* When cards are visible, switch scene to top-aligned */
+      .scene.cards-open {
+        justify-content: flex-start !important;
+        padding-top: 40px !important;
+      }
+
+      /* Button fixed at bottom */
+      .reset-btn {
+        position: fixed !important;
+        bottom: 30px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+      }
+      .reset-btn.visible {
+        transform: translateX(-50%) !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="hearts-bg" aria-hidden="true">
+    <span class="heart-drift">♥</span>
+    <span class="heart-drift">♥</span>
+    <span class="heart-drift">♥</span>
+    <span class="heart-drift">♥</span>
+    <span class="heart-drift">♥</span>
+    <span class="heart-drift">♥</span>
+    <span class="heart-drift">♥</span>
+    <span class="heart-drift">♥</span>
+    <span class="heart-drift">♥</span>
+    <span class="heart-drift">♥</span>
+  </div>
+
+  <div class="particles" id="particles"></div>
+
+  <div class="scene">
+    <div class="pack-wrap" id="packWrap" role="button" tabindex="0" aria-label="Open booster pack">
+      <div class="pack-glow"></div>
+      <div class="pack-container">
+        <img src="assets/card-packaging.png" alt="Valentine's Booster Pack" id="packImg">
+      </div>
+    </div>
+
+    <div class="cards-phase" id="cardsPhase">
+      <div class="stack-container" id="stackContainer" aria-label="Click top card to flip, then click again to send to collection">
+      </div>
+      <div class="collection-row" id="collectionRow">
+      </div>
+    </div>
+  </div>
+
+  <!-- FIXED: button outside .scene entirely, position:fixed to bottom -->
+  <button type="button" class="reset-btn" id="resetBtn" aria-label="Open another pack">
+    Open new pack
+  </button>
+
+  <script>
+    // FIXED: all 15 cards
+    const CARD_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+    const CARDS_PER_PACK = 5;
+
+    const packWrap = document.getElementById('packWrap');
+    const cardsPhase = document.getElementById('cardsPhase');
+    const stackContainer = document.getElementById('stackContainer');
+    const collectionRow = document.getElementById('collectionRow');
+    const resetBtn = document.getElementById('resetBtn');
+    const particlesEl = document.getElementById('particles');
+
+    let isSliding = false;
+
+    function pickRandomCards() {
+      const shuffled = [...CARD_IDS].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, CARDS_PER_PACK);
+    }
+
+    function spawnHeartParticles(x, y) {
+      const count = 16;
+      const centerX = x ?? window.innerWidth / 2;
+      const centerY = y ?? window.innerHeight / 2;
+
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement('span');
+        p.className = 'particle';
+        p.textContent = '♥';
+        p.style.left = centerX + 'px';
+        p.style.top = centerY + 'px';
+        const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+        const dist = 60 + Math.random() * 80;
+        p.animate([
+          { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' },
+          { opacity: 0, transform: `translate(calc(-50% + ${Math.cos(angle) * dist}px), calc(-50% + ${Math.sin(angle) * dist}px)) scale(0.3)` }
+        ], { duration: 1000, easing: 'ease-out' }).onfinish = () => p.remove();
+        particlesEl.appendChild(p);
+      }
+    }
+
+    function makeCardElement(id, sizeClass) {
+      const wrap = document.createElement('div');
+      wrap.className = 'card-wrapper ' + sizeClass;
+      wrap.dataset.cardId = id;
+      wrap.innerHTML = `
+        <div class="card-inner">
+          <div class="card-face back">
+            <img src="assets/card-back.png" alt="">
+          </div>
+          <div class="card-face front">
+            <img src="assets/card-front-${id}.png" alt="Card ${id}">
+          </div>
+        </div>
+      `;
+      return wrap;
+    }
+
+    function renderStack(cardIds) {
+      stackContainer.innerHTML = '';
+      cardIds.forEach((id, i) => {
+        const sizeClass = i === 0 ? 'size-stack-top' : 'size-stack';
+        const card = makeCardElement(id, sizeClass);
+        stackContainer.appendChild(card);
+      });
+    }
+
+    function getCollectionSlotRect(index) {
+      const gap = 20;
+      const cardWidth = 220;
+      const cardHeight = 307;
+      const numCards = index + 1;
+      const totalWidth = numCards * cardWidth + (numCards - 1) * gap;
+      const rowRect = collectionRow.getBoundingClientRect();
+      const startX = rowRect.left + (rowRect.width - totalWidth) / 2;
+      const x = startX + index * (cardWidth + gap) + cardWidth / 2;
+      const y = rowRect.top + cardHeight / 2;
+      return { x, y };
+    }
+
+    function onStackClick(e) {
+      if (isSliding) return;
+      const topCard = stackContainer.querySelector('.card-wrapper:first-child');
+      if (!topCard || e.target !== topCard && !topCard.contains(e.target)) return;
+
+      if (!topCard.classList.contains('flipped')) {
+        topCard.classList.add('flipped');
+        return;
+      }
+
+      isSliding = true;
+      const cardId = topCard.dataset.cardId;
+      const startRect = topCard.getBoundingClientRect();
+      const startX = startRect.left + startRect.width / 2;
+      const startY = startRect.top + startRect.height / 2;
+      const targetIndex = collectionRow.children.length;
+      const target = getCollectionSlotRect(targetIndex);
+
+      topCard.classList.add('sliding');
+      topCard.style.position = 'fixed';
+      topCard.style.left = startX + 'px';
+      topCard.style.top = startY + 'px';
+      topCard.style.transform = 'translate(-50%, -50%)';
+      topCard.style.width = '300px';
+      topCard.style.marginLeft = '0';
+      topCard.style.marginTop = '0';
+      topCard.style.zIndex = '100';
+      document.body.appendChild(topCard);
+
+      requestAnimationFrame(() => {
+        topCard.style.transition = 'left 0.5s ease-in-out, top 0.5s ease-in-out, width 0.5s ease-in-out';
+        topCard.style.left = target.x + 'px';
+        topCard.style.top = target.y + 'px';
+        topCard.style.width = '220px';
+      });
+
+      setTimeout(() => {
+        topCard.remove();
+        topCard.classList.remove('sliding');
+        topCard.style.position = '';
+        topCard.style.left = '';
+        topCard.style.top = '';
+        topCard.style.transform = '';
+        topCard.style.width = '';
+        topCard.style.transition = '';
+        topCard.style.zIndex = '';
+        topCard.classList.remove('size-stack-top', 'size-stack');
+        topCard.classList.add('size-row');
+        collectionRow.appendChild(topCard);
+
+        const newTop = stackContainer.querySelector('.card-wrapper:first-child');
+        if (newTop) {
+          newTop.classList.remove('size-stack');
+          newTop.classList.add('size-stack-top');
+        }
+
+        isSliding = false;
+
+        if (collectionRow.children.length === 5) {
+          cardsPhase.classList.add('final-state');
+          setTimeout(() => resetBtn.classList.add('visible'), 300);
+        }
+      }, 500);
+    }
+
+    function openPack() {
+      packWrap.classList.add('opening', 'tearing');
+      const rect = packWrap.getBoundingClientRect();
+      spawnHeartParticles(rect.left + rect.width / 2, rect.top + rect.height / 2);
+
+      setTimeout(() => {
+        packWrap.style.display = 'none';
+        const cardIds = pickRandomCards();
+        renderStack(cardIds);
+        collectionRow.innerHTML = '';
+        cardsPhase.classList.add('visible');
+        document.querySelector('.scene').classList.add('cards-open');
+        window.scrollTo(0, 0);
+        cardsPhase.classList.remove('final-state');
+        resetBtn.classList.remove('visible');
+        packWrap.classList.remove('tearing');
+      }, 700);
+    }
+
+    function reset() {
+      packWrap.style.display = '';
+      packWrap.classList.remove('opening');
+      cardsPhase.classList.remove('visible');
+      document.querySelector('.scene').classList.remove('cards-open');
+      stackContainer.innerHTML = '';
+      collectionRow.innerHTML = '';
+      resetBtn.classList.remove('visible');
+      cardsPhase.classList.remove('final-state');
+      isSliding = false;
+    }
+
+    stackContainer.addEventListener('click', onStackClick);
+
+    packWrap.addEventListener('click', () => {
+      if (!packWrap.classList.contains('opening')) openPack();
+    });
+    packWrap.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && !packWrap.classList.contains('opening')) {
+        e.preventDefault();
+        openPack();
+      }
+    });
+    resetBtn.addEventListener('click', reset);
+  </script>
+</body>
+</html>
